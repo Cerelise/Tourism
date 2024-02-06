@@ -5,17 +5,21 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 
 from .serializers import AttractionSerializer,AttractionsArticleSerializer
 from .models import Attraction,AttractionsPicture,AttractionsArticle,Paragraph
+from .permissions import IsAdminUserOrReadOnly
 
 # Create your views here.
 
 class AttractionListView(APIView):
 
+    permission_classes = [IsAdminUserOrReadOnly]
+
     def get(self,request):
         attractions = Attraction.objects.filter(status=1)
+        # attractions = Attraction.objects.all()
         serializer = AttractionSerializer(attractions,many=True)
 
         return Response(data=serializer.data,status=status.HTTP_200_OK)
@@ -47,6 +51,7 @@ class AttractionListView(APIView):
         for picture_data in pictures_data:
             title = picture_data["title"]
             desc = picture_data["desc"]
+            # picture = picture_data["picture"]
             related_attr = attraction
 
             attraction_pic = AttractionsPicture(title=title,desc=desc,related_attr=related_attr)
@@ -64,6 +69,7 @@ class AttractionListView(APIView):
 
 class AttractionManager(APIView):
 
+      permission_classes = [IsAdminUserOrReadOnly]
       serializer_class = AttractionSerializer
 
       def get(self,request,pk):
@@ -86,6 +92,8 @@ class AttractionManager(APIView):
 
 class AttrArticleListView(APIView):
 
+    permission_classes = [IsAdminUserOrReadOnly]
+
     def get(self,request):
         articles = AttractionsArticle.objects.filter(status=1)
         serializer = AttractionsArticleSerializer(articles,many=True)
@@ -105,34 +113,31 @@ class AttrArticleListView(APIView):
           "isTop":data['isTop'],
         }
 
-        article_serializer = AttractionsArticleSerializer(data=article_data)
+        # article_serializer = AttractionsArticleSerializer(data=article_data)
+        article = AttractionsArticle.objects.create(**article_data)
 
-        if article_serializer.is_valid():
+        paragraphs_data = json.loads(data.get('paragraphs'))
 
-            article_serializer.save()
-
-            article_id = article_serializer.data['id']
-
-            paragraphs_data = json.loads(data.get('paragraphs'))
-
-            for paragraph in paragraphs_data:
-                title = paragraph['title']
-                content = paragraph['content']
-                related_article = get_object_or_404(AttractionsArticle,id=article_id)
-
-                article_paragraph = Paragraph(title=title,content=content,related_article=related_article)
-                article_paragraph.save()
+        for paragraph in paragraphs_data:
+            title = paragraph['title']
+            content = paragraph['content']
+            related_article = article
             
-            response = {
-              "message":"景点文章创建成功！",
-              "detail":article_serializer.data
-            }
-            return Response(data=response,status=status.HTTP_201_CREATED)
-        return Response(data=article_data.errors,status=status.HTTP_400_BAD_REQUEST)
+            article_paragraph = Paragraph(title=title,content=content,related_article=related_article)
+            article_paragraph.save()
+        
+        serializer = AttractionsArticleSerializer(article)
+
+        response = {
+            "message":"景点文章创建成功！",
+            "detail":serializer.data
+        }
+        return Response(data=response,status=status.HTTP_201_CREATED)
 
 
 class AttrArticleManager(APIView):
 
+      permission_classes = [IsAdminUserOrReadOnly]
       serializer_class = AttractionsArticleSerializer
 
       def get(self,request,pk):
@@ -153,6 +158,7 @@ class AttrArticleManager(APIView):
           return Response({"message":"该景点文章已删除！"},status=status.HTTP_200_OK)
 
 @api_view(['GET'])
+@permission_classes(['IsAdminUserOrReadOnly'])
 def getScentic(request):
 
     article_list = AttractionsArticle.objects.all()

@@ -3,7 +3,7 @@ from . import views
 
 urlpatterns = [
   path('category/list',views.CategoryListView.as_view()),
-  path('category/detail/<uuid:pk>',views.CategoryManagerView.as_view()),
+  path('category/detail/<str:category_id>',views.CategoryManagerView.as_view()),
   path('question/list',views.QuestionsListView.as_view()),
   path('question/add/<uuid:pk>',views.addQuestion,name="add_question"),
   path('question/delete/<uuid:pk>',views.deleteQuestion,name="delete_question"),

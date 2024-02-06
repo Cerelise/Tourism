@@ -5,13 +5,16 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,permission_classes
 
 from .models import QandA,Category,notice,HomeInfo
 from .serializers import QandASerializer,CategorySerializer,NoticeSerializer,HomeSerializer
+from .permissions import IsAdminUserOrReadOnly
 
 # Create your views here.
 class CategoryListView(APIView):
+
+    permission_classes = [IsAdminUserOrReadOnly]
 
     def get(self,request):
         cateories = Category.objects.filter(status=1)
@@ -35,18 +38,21 @@ class CategoryListView(APIView):
 
 class CategoryManagerView(APIView):
 
-    def get(request,pk):
+    permission_classes = [IsAdminUserOrReadOnly]
+
+
+    def get(self,request,category_id:str):
         
-        category = get_object_or_404(Category,id=pk)
+        category = get_object_or_404(Category,id=category_id)
         questions = QandA.objects.filter(category=category)
 
         serializer = QandASerializer(questions,many=True)
         
         return Response(data=serializer.data,status=status.HTTP_200_OK)
 
-    def delete(request,pk):
+    def delete(self,request,category_id:str):
         
-        category = get_object_or_404(Category,id=pk)
+        category = get_object_or_404(Category,id=category_id)
         category.status = 0
         category.save()
 
@@ -72,6 +78,7 @@ class QuestionsListView(APIView):
 
 
 @api_view(['POST'])
+@permission_classes([IsAdminUserOrReadOnly])
 def addQuestion(request,pk):
 
     data = request.data
@@ -98,6 +105,7 @@ def addQuestion(request,pk):
 
 
 @api_view(['DELETE'])
+@permission_classes([IsAdminUserOrReadOnly])
 def deleteQuestion(request,pk):
     
     question = get_object_or_404(QandA,id=pk)
@@ -110,6 +118,8 @@ def deleteQuestion(request,pk):
 
 # 公告
 class NoticeListView(APIView):
+
+    permission_classes = [IsAdminUserOrReadOnly]
     
     def get(self,request):
         
@@ -141,6 +151,8 @@ class NoticeListView(APIView):
 
 class NoticeManagerView(APIView):
 
+    permission_classes = [IsAdminUserOrReadOnly]
+
     serializer_class = NoticeSerializer
     
     def get(self,request,pk):
@@ -163,6 +175,8 @@ class NoticeManagerView(APIView):
 
 # 主页
 class HomeListView(APIView):
+
+    permission_classes = [IsAdminUserOrReadOnly]
     
     def get(self,request):
 
@@ -195,6 +209,8 @@ class HomeListView(APIView):
 
 
 class HomeManagerView(APIView):
+
+    permission_classes = [IsAdminUserOrReadOnly]
   
     serializer_class = HomeSerializer
     
