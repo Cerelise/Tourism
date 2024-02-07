@@ -11,6 +11,9 @@ class HomeInfo(models.Model):
     status = models.SmallIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self) -> str:
         return self.title
 
@@ -22,6 +25,9 @@ class notice(models.Model):
     status = models.SmallIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self) -> str:
         return self.title
 
@@ -30,6 +36,9 @@ class Category(models.Model):
     title = models.CharField(max_length=50)
     status = models.SmallIntegerField(default=1)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self) -> str:
         return self.title
@@ -41,6 +50,9 @@ class QandA(models.Model):
     status = models.SmallIntegerField(default=1)
     category = models.ForeignKey(Category,on_delete=models.SET_NULL,related_name='categories',null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self) -> str:
         return self.title

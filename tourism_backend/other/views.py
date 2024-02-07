@@ -44,11 +44,28 @@ class CategoryManagerView(APIView):
     def get(self,request,category_id:str):
         
         category = get_object_or_404(Category,id=category_id)
-        questions = QandA.objects.filter(category=category)
+        questions = QandA.objects.filter(category=category,status=1)
 
         serializer = QandASerializer(questions,many=True)
         
         return Response(data=serializer.data,status=status.HTTP_200_OK)
+
+    def put(self,request,category_id:str):
+
+        category = get_object_or_404(Category,id=category_id)
+        data = request.data
+
+        serializer = CategorySerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+            response = {
+              "message":"类别已更新！",
+              "data":serializer.data
+            }
+            return Response(data=response,status=status.HTTP_200_OK)
+        return Response(data=serializer.errors,status=status.HTTP_400_BAD_REQUEST)
+
 
     def delete(self,request,category_id:str):
         
@@ -79,14 +96,14 @@ class QuestionsListView(APIView):
 
 @api_view(['POST'])
 @permission_classes([IsAdminUserOrReadOnly])
-def addQuestion(request,pk):
+def addQuestion(request):
 
     data = request.data
 
     question_data = {
         "question":data['question'],
         "answer":data['answer'],
-        "category":pk
+        "category":data['id']
     }
 
     question_serializer = QandASerializer(data=question_data)

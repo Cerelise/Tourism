@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [ 
+    path('picture',views.uploadAttractionPhoto,name="upload_picture"),
     path('list',views.AttractionListView.as_view()),
     path('detail/<uuid:pk>',views.AttractionManager.as_view()),
     path('article/list',views.AttrArticleListView.as_view()),

@@ -1,6 +1,10 @@
 import json
+import os
+import uuid 
+from PIL import Image
 
 from django.shortcuts import get_object_or_404
+from django.core.files.storage import default_storage
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -12,6 +16,32 @@ from .models import Attraction,AttractionsPicture,AttractionsArticle,Paragraph
 from .permissions import IsAdminUserOrReadOnly
 
 # Create your views here.
+def handle_photo(file):
+    
+    ext = file.name.split('.')[-1]
+    file_name = '{}.{}'.format(uuid.uuid4().hex[:10],ext)
+
+    pic_path = os.path.join("media","attractions",file_name)
+    
+    os.makedirs(os.path.dirname(pic_path), exist_ok=True)
+
+    img = Image.open(file)
+
+    img.save(pic_path)
+
+    return pic_path
+
+@api_view(['POST'])
+@permission_classes([IsAdminUserOrReadOnly])
+def uploadAttractionPhoto(request):
+    
+    picture = request.FILES.get('picture')
+
+    picture_path = handle_photo(picture)
+
+    response = picture_path.replace('\\','/')
+
+    return Response(response,status=status.HTTP_200_OK)
 
 class AttractionListView(APIView):
 
@@ -47,14 +77,31 @@ class AttractionListView(APIView):
         # title=title,desc=desc,main_pic=main_pic,map_pic=map_pic,about=about,content=content
 
         pictures_data = json.loads(data.get('pictures'))
+
+        pictures = []
+        i = 0
+        while f'pictures[{i}][title]' in data:
+            title_key = f"pictures[{i}][title]"
+            desc_key = f"pictures[{i}][desc]"
+            picture_key = f"pictures[{i}][picture]"
+
+            title = data.get(title_key)
+            desc = data.get(desc_key)
+            picture = data.get(picture_key)
+
+            picture_obj = {'title':title,'desc':desc,'picture':picture}
+            pictures.append(picture_obj)
+            i+=1
+            
+        pictures_data = pictures 
         # print(pictures_data)
         for picture_data in pictures_data:
             title = picture_data["title"]
             desc = picture_data["desc"]
-            # picture = picture_data["picture"]
+            picture = picture_data["picture"]
             related_attr = attraction
 
-            attraction_pic = AttractionsPicture(title=title,desc=desc,related_attr=related_attr)
+            attraction_pic = AttractionsPicture(title=title,desc=desc,picture=picture,related_attr=related_attr)
             attraction_pic.save()
 
         serializer = AttractionSerializer(attraction,many=False)
@@ -116,7 +163,22 @@ class AttrArticleListView(APIView):
         # article_serializer = AttractionsArticleSerializer(data=article_data)
         article = AttractionsArticle.objects.create(**article_data)
 
-        paragraphs_data = json.loads(data.get('paragraphs'))
+        paragraphs_data = json.loads(data.get('paragraph'))
+
+        paragraphs = []
+        i = 0
+        while f'paragraph[{i}][title]' in data:
+            title_key = f"paragraph[{i}][title]"
+            content_key = f"paragraph[{i}][content]"
+
+            title = data.get(title_key)
+            content = data.get(content_key)
+
+            paragraph = {'title':title,'content':content}
+            paragraphs.append(paragraph)
+            i+=1
+
+        paragraphs_data = paragraphs
 
         for paragraph in paragraphs_data:
             title = paragraph['title']
@@ -158,15 +220,12 @@ class AttrArticleManager(APIView):
           return Response({"message":"该景点文章已删除！"},status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes(['IsAdminUserOrReadOnly'])
 def getScentic(request):
 
-    article_list = AttractionsArticle.objects.all()
+    attr_list = Attraction.objects.filter(status=1)
 
-    scentic_list = article_list.values_list('scentic',flat=True)
+    scentic_list = attr_list.values_list('title',flat=True)
     
-    
-
     return Response(scentic_list,status=status.HTTP_200_OK)
 
 
