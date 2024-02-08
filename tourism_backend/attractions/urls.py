@@ -8,4 +8,6 @@ urlpatterns = [
     path('article/list',views.AttrArticleListView.as_view()),
     path('article/detail/<uuid:pk>',views.AttrArticleManager.as_view()),
     path('scentic/',views.getScentic,name='get_scentic_list'),
+    path('article/search/<str:keyword>',views.AttractionArticleFilterView.as_view()),
+    path('home',views.getIndex,name="get_home_page"),
 ]

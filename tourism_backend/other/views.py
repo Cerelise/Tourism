@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view,permission_classes
 
-from .models import QandA,Category,notice,HomeInfo
+from .models import QandA,Category,notice,HomeInfo,Visitation
 from .serializers import QandASerializer,CategorySerializer,NoticeSerializer,HomeSerializer
 from .permissions import IsAdminUserOrReadOnly
 
@@ -248,6 +248,20 @@ class HomeManagerView(APIView):
         home.save()
 
         return Response({"message":"该主页内容已删除！"},status=status.HTTP_200_OK)
+
+@api_view(["GET"])
+def visitation_view(request):
+    
+    visitor = "访客数"
+    count = Visitation.objects.get(name=visitor)
+    print(count)
+    
+    count.visit_num += 1
+    count.save()
+
+    print(count.visit_num)
+
+    return Response({"count":count.visit_num},status=status.HTTP_200_OK)
 
 
 

@@ -11,4 +11,5 @@ urlpatterns = [
   path('notice/detail/<uuid:pk>',views.NoticeManagerView.as_view()),
   path('home/list',views.HomeListView.as_view()),
   path('home/detail/<uuid:pk>',views.HomeManagerView.as_view()),
+  path('visitor',views.visitation_view,name="visit_visitor"),
 ]

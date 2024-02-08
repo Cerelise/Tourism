@@ -12,7 +12,7 @@ class AttractionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Attraction
-        fields = ('id', 'title', 'desc', 'main_pic', 'map_pic', 'about' ,'content', 'created_at', 'pictures')
+        fields = ('id', 'title', 'desc', 'main_pic', 'map_pic', 'about' ,'content', 'isIndex','created_at', 'pictures')
 
 
 class ParagraphSerializer(serializers.ModelSerializer):

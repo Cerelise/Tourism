@@ -16,6 +16,8 @@ class Attraction(models.Model):
     content = models.TextField()
     status = models.SmallIntegerField(default=1) # 是否删除
     created_at = models.DateTimeField(auto_now_add=True)
+    isIndex = models.BooleanField(default=False)
+
 
     class Meta:
         ordering = ['-created_at']

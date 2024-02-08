@@ -56,3 +56,12 @@ class QandA(models.Model):
 
     def __str__(self) -> str:
         return self.title
+
+class Visitation(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4,editable=False)
+    name = models.CharField(max_length=50)
+    visit_num = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self) -> str:
+        return self.name

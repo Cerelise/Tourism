@@ -4,7 +4,6 @@ import uuid
 from PIL import Image
 
 from django.shortcuts import get_object_or_404
-from django.core.files.storage import default_storage
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -64,6 +63,11 @@ class AttractionListView(APIView):
         map_pic = data['map_pic']
         about = data['about']
         content = data['content']
+        isIndex = data['isIndex']
+
+        exist_title = Attraction.objects.filter(title=title,status=1)
+        if exist_title:
+            return Response({"message":"景点名称重复，请重新填写！"},status=status.HTTP_400_BAD_REQUEST)
 
         attr_data = {
           'title':title,
@@ -72,29 +76,14 @@ class AttractionListView(APIView):
           'map_pic':map_pic,
           'about':about,
           'content':content,
+          'isIndex':isIndex
         }
         attraction = Attraction.objects.create(**attr_data)
         # title=title,desc=desc,main_pic=main_pic,map_pic=map_pic,about=about,content=content
 
-        pictures_data = json.loads(data.get('pictures'))
+        # pictures_data = json.loads(data.get('pictures'))
+        pictures_data = data.get('swiper')
 
-        pictures = []
-        i = 0
-        while f'pictures[{i}][title]' in data:
-            title_key = f"pictures[{i}][title]"
-            desc_key = f"pictures[{i}][desc]"
-            picture_key = f"pictures[{i}][picture]"
-
-            title = data.get(title_key)
-            desc = data.get(desc_key)
-            picture = data.get(picture_key)
-
-            picture_obj = {'title':title,'desc':desc,'picture':picture}
-            pictures.append(picture_obj)
-            i+=1
-            
-        pictures_data = pictures 
-        # print(pictures_data)
         for picture_data in pictures_data:
             title = picture_data["title"]
             desc = picture_data["desc"]
@@ -154,7 +143,7 @@ class AttrArticleListView(APIView):
         article_data = {
           "title":data['title'],
           "subTitle":data['subTitle'],
-          "content":data['content'],
+          # "content":data['content'],
           "img":data['img'],
           "scentic":data['scentic'],
           "isTop":data['isTop'],
@@ -163,7 +152,7 @@ class AttrArticleListView(APIView):
         # article_serializer = AttractionsArticleSerializer(data=article_data)
         article = AttractionsArticle.objects.create(**article_data)
 
-        paragraphs_data = json.loads(data.get('paragraph'))
+        # paragraphs_data = json.loads(data.get('paragraph'))
 
         paragraphs = []
         i = 0
@@ -227,6 +216,30 @@ def getScentic(request):
     scentic_list = attr_list.values_list('title',flat=True)
     
     return Response(scentic_list,status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def getIndex(request):
+
+    index = Attraction.objects.filter(status=1,isIndex=True)
+
+    serializer = AttractionSerializer(index,many=True)
+
+    return Response(serializer.data,status=status.HTTP_200_OK)
+
+
+class AttractionArticleFilterView(APIView):
+
+    def get(self,request,keyword):
+
+        args = { 'scentic__icontains':keyword }
+        article_list = AttractionsArticle.objects.filter(**args)
+
+        if len(article_list) == 0:
+            return Response({"message":"没有找到与{keyword}有关的景点文章".format(keyword=keyword)})
+
+        serializer = AttractionsArticleSerializer(article_list,many=True)
+
+        return Response(data=serializer.data,status=status.HTTP_200_OK)
 
 
 
